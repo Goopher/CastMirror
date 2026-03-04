@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>CastMirror Receiver</title>
+  <style>
+    * { margin: 0; padding: 0; }
+    body {
+      background: #000;
+      overflow: hidden;
+      width: 100vw;
+      height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    #mirror {
+      max-width: 100vw;
+      max-height: 100vh;
+      object-fit: contain;
+    }
+    #status {
+      position: absolute;
+      bottom: 40px;
+      left: 50%;
+      transform: translateX(-50%);
+      color: #aaa;
+      font-family: -apple-system, sans-serif;
+      font-size: 24px;
+      text-align: center;
+    }
+  </style>
+</head>
+<body>
+  <img id="mirror" style="display:none" />
+  <div id="status">Waiting for stream...</div>
+
+  <script src="//www.gstatic.com/cast/sdk/libs/caf_receiver/v3/cast_receiver_framework.js"></script>
+  <script>
+    const NAMESPACE = 'urn:x-cast:com.castmirror.stream';
+    // Fix #10: Limit retries so transient errors don't loop forever.
+    const MAX_RETRIES = 10;
+    const RETRY_DELAY_MS = 500;
+
+    const context = cast.framework.CastReceiverContext.getInstance();
+    const img = document.getElementById('mirror');
+    const status = document.getElementById('status');
+
+    context.setInactivityTimeout(3600);
+    context.disableIdleTimeout(true);
+
+    context.addCustomMessageListener(NAMESPACE, (event) => {
+      const data = JSON.parse(event.data);
+      if (data.type === 'stream') {
+        startStream(data.url);
+      } else if (data.type === 'stop') {
+        stopStream();
+      }
+    });
+
+    function startStream(url) {
+      let retries = 0;
+
+      status.style.display = 'none';
+      img.style.display = 'block';
+      img.src = url;
+
+      img.onerror = () => {
+        retries++;
+        // Fix #10: After too many failures show an error instead of retrying forever.
+        if (retries > MAX_RETRIES) {
+          img.style.display = 'none';
+          img.src = '';
+          status.textContent = 'Stream lost. Reconnect from the app.';
+          status.style.display = 'block';
+          return;
+        }
+        // Fix #10: Shorter delay (500ms vs 2s) for faster recovery.
+        setTimeout(() => {
+          img.src = url + '?t=' + Date.now();
+        }, RETRY_DELAY_MS);
+      };
+    }
+
+    function stopStream() {
+      img.style.display = 'none';
+      img.src = '';
+      status.textContent = 'Stream stopped';
+      status.style.display = 'block';
+    }
+
+    context.start();
+  </script>
+</body>
+</html>

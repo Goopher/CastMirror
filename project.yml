@@ -1,0 +1,50 @@
+name: CastMirror
+options:
+  bundleIdPrefix: com.castmirror
+  deploymentTarget:
+    iOS: "16.0"
+  xcodeVersion: "15.0"
+  generateEmptyDirectories: true
+
+settings:
+  base:
+    SWIFT_VERSION: "5.9"
+    IPHONEOS_DEPLOYMENT_TARGET: "16.0"
+    TARGETED_DEVICE_FAMILY: "1,2"
+
+targets:
+  CastMirror:
+    type: application
+    platform: iOS
+    deploymentTarget: "16.0"
+    sources:
+      - path: CastMirror
+        excludes:
+          - "**/*.md"
+    info:
+      path: CastMirror/App/Info.plist
+      properties:
+        CFBundleName: CastMirror
+        CFBundleDisplayName: CastMirror
+        CFBundleIdentifier: com.castmirror.app
+        CFBundleVersion: "1"
+        CFBundleShortVersionString: "1.0"
+        UILaunchScreen:
+          UIColorName: ""
+        UISupportedInterfaceOrientations:
+          - UIInterfaceOrientationPortrait
+        UISupportedInterfaceOrientations~ipad:
+          - UIInterfaceOrientationPortrait
+          - UIInterfaceOrientationLandscapeLeft
+          - UIInterfaceOrientationLandscapeRight
+        NSLocalNetworkUsageDescription: "CastMirror needs access to your local network to discover and connect to Chromecast devices."
+        NSBonjourServices:
+          - _googlecast._tcp
+        UIBackgroundModes:
+          - audio
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.castmirror.app
+        INFOPLIST_FILE: CastMirror/App/Info.plist
+        CODE_SIGN_STYLE: Automatic
+        DEVELOPMENT_TEAM: ""

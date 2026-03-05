@@ -46,8 +46,9 @@
     const img = document.getElementById('mirror');
     const status = document.getElementById('status');
 
-    context.setInactivityTimeout(3600);
-    context.disableIdleTimeout(true);
+    const options = new cast.framework.CastReceiverOptions();
+    options.maxInactivity = 3600;
+    options.disableIdleTimeout = true;
 
     context.addCustomMessageListener(NAMESPACE, (event) => {
       console.log('Received message:', typeof event.data, event.data);
@@ -91,7 +92,7 @@
       status.style.display = 'block';
     }
 
-    context.start();
+    context.start(options);
   </script>
 </body>
 </html>

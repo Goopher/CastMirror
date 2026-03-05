@@ -50,8 +50,10 @@
     context.disableIdleTimeout(true);
 
     context.addCustomMessageListener(NAMESPACE, (event) => {
-      const data = JSON.parse(event.data);
+      console.log('Received message:', typeof event.data, event.data);
+      const data = typeof event.data === 'string' ? JSON.parse(event.data) : event.data;
       if (data.type === 'stream') {
+        console.log('Starting stream:', data.url);
         startStream(data.url);
       } else if (data.type === 'stop') {
         stopStream();

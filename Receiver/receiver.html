@@ -19,6 +19,12 @@
       max-height: 100vh;
       object-fit: contain;
     }
+    #video {
+      width: 100vw;
+      height: 100vh;
+      object-fit: contain;
+      display: none;
+    }
     #status {
       position: absolute;
       bottom: 40px;
@@ -33,6 +39,7 @@
 </head>
 <body>
   <img id="mirror" style="display:none" />
+  <video id="video" autoplay></video>
   <div id="status">Waiting for stream...</div>
 
   <script src="//www.gstatic.com/cast/sdk/libs/caf_receiver/v3/cast_receiver_framework.js"></script>
@@ -44,7 +51,9 @@
 
     const context = cast.framework.CastReceiverContext.getInstance();
     const img = document.getElementById('mirror');
+    const video = document.getElementById('video');
     const status = document.getElementById('status');
+    let currentMode = null; // 'mirror' or 'video'
 
     const options = new cast.framework.CastReceiverOptions();
     options.maxInactivity = 3600;
@@ -54,14 +63,20 @@
       console.log('Received message:', typeof event.data, event.data);
       const data = typeof event.data === 'string' ? JSON.parse(event.data) : event.data;
       if (data.type === 'stream') {
-        console.log('Starting stream:', data.url);
-        startStream(data.url);
+        console.log('Starting MJPEG stream:', data.url);
+        stopAll();
+        startMirrorStream(data.url);
+      } else if (data.type === 'video') {
+        console.log('Starting video stream:', data.url);
+        stopAll();
+        startVideoStream(data.url);
       } else if (data.type === 'stop') {
-        stopStream();
+        stopAll();
       }
     });
 
-    function startStream(url) {
+    function startMirrorStream(url) {
+      currentMode = 'mirror';
       let retries = 0;
 
       status.style.display = 'none';
@@ -70,7 +85,6 @@
 
       img.onerror = () => {
         retries++;
-        // Fix #10: After too many failures show an error instead of retrying forever.
         if (retries > MAX_RETRIES) {
           img.style.display = 'none';
           img.src = '';
@@ -78,16 +92,44 @@
           status.style.display = 'block';
           return;
         }
-        // Fix #10: Shorter delay (500ms vs 2s) for faster recovery.
         setTimeout(() => {
           img.src = url + '?t=' + Date.now();
         }, RETRY_DELAY_MS);
       };
     }
 
-    function stopStream() {
+    function startVideoStream(url) {
+      currentMode = 'video';
+      status.style.display = 'none';
+      video.style.display = 'block';
+
+      video.src = url;
+      video.play().catch(function(err) {
+        console.error('Video play error:', err);
+        status.textContent = 'Failed to play stream.';
+        status.style.display = 'block';
+        video.style.display = 'none';
+      });
+
+      video.onerror = function() {
+        console.error('Video element error');
+        status.textContent = 'Stream error. Try another channel.';
+        status.style.display = 'block';
+        video.style.display = 'none';
+      };
+    }
+
+    function stopAll() {
       img.style.display = 'none';
       img.src = '';
+      img.onerror = null;
+
+      video.pause();
+      video.src = '';
+      video.style.display = 'none';
+      video.onerror = null;
+
+      currentMode = null;
       status.textContent = 'Stream stopped';
       status.style.display = 'block';
     }

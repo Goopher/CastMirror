@@ -57,6 +57,15 @@ final class CastSessionManager: NSObject, ObservableObject {
         channel.sendJSON(["type": "stream", "url": url])
     }
 
+    /// Sends a video stream URL (HLS / direct) to the Cast receiver for IPTV playback.
+    func sendVideoURL(_ url: String) {
+        guard let channel = castChannel else {
+            print("Cast channel not available")
+            return
+        }
+        channel.sendJSON(["type": "video", "url": url])
+    }
+
     /// Sends a stop command to the Cast receiver.
     func sendStopCommand() {
         castChannel?.sendJSON(["type": "stop"])

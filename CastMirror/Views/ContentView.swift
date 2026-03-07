@@ -3,8 +3,29 @@ import SwiftUI
 struct ContentView: View {
     @EnvironmentObject var castSession: CastSessionManager
     @EnvironmentObject var mirrorController: MirrorController
+    @EnvironmentObject var iptvController: IPTVController
+
+    @State private var selectedTab = 0
 
     var body: some View {
+        TabView(selection: $selectedTab) {
+            mirrorTab
+                .tabItem {
+                    Label("Mirror", systemImage: "rectangle.on.rectangle")
+                }
+                .tag(0)
+
+            IPTVContainerView()
+                .tabItem {
+                    Label("IPTV", systemImage: "tv")
+                }
+                .tag(1)
+        }
+    }
+
+    // MARK: - Mirror Tab
+
+    private var mirrorTab: some View {
         NavigationStack {
             VStack(spacing: 0) {
                 statusBanner
